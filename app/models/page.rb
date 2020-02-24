@@ -1,9 +1,9 @@
-class Page < ActiveRecord::Base
+class Page < ApplicationRecord
   belongs_to :user
 
   has_many :page_snapshots, dependent: :destroy
 
-  attr_accessor :subscriptions
+  attr_accessor :subscriptions # Gets set in controller on update/create
   after_create :update_subscriptions
   after_save   :update_subscriptions
 
@@ -37,7 +37,16 @@ class Page < ActiveRecord::Base
   end
 
   def match_text
-    document.css(self.css_selector).text
+    @match = document.css(self.css_selector)
+
+    if self.exclude_selector.present?
+      # Set the content of the exclude selector to the empty string
+      @match.css(self.exclude_selector).each do |node|
+        node.content = ""
+      end
+    end
+
+    @match.text
   end
 
   def match_html
